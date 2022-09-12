@@ -177,7 +177,6 @@ class Apple {
 class Game {
   static Start()
   {
-    ctx.clearRect(0, 0, canvas.width, canvas.height); //Очистка холста от предыдущего кадраp
     youLoserMessage.className = 'hidden';
 
     const snake = new Snake();
@@ -202,7 +201,9 @@ class Game {
       }
     });
     
+
     this.timer = setInterval(() => this.Update(snake, apple), 1000 / 8);
+    console.log(this.timer);
   }
    
   static Stop()
@@ -233,8 +234,12 @@ class Game {
     snake.draw();
     drawBoard();
   }
+
+  static Restart() {
+    window.location.reload();
+  }
 }
 
-document.getElementById('restart').onclick = Game.Start;
+document.getElementById('restart').onclick = Game.Restart;
 
 Game.Start();

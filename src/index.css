@@ -12,6 +12,10 @@ canvas {
     background-color: #efefef;
 }
 
+#title {
+    font-size: 20px;
+}
+
 #you-loser {
     position: absolute;
     overflow: hidden;
@@ -22,6 +26,7 @@ canvas {
     flex-direction: column;
     align-items: center;
     font-size: 30px;
+    justify-content: center;
 }
 
 #you-loser.hidden {
@@ -29,12 +34,13 @@ canvas {
 }
 
 #you-loser a {
-    margin-top: 30px;
+    margin: 10px;
     text-decoration: none;
-    color: rgba(0, 0, 0, 0.741);
+    color: rgb(0, 0, 0);
     padding: 20px;
     border: 5px solid;
     cursor: pointer;
+
 }
 
 #you-loser a:hover {
