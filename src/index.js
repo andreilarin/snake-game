@@ -31,9 +31,11 @@ const title = document.createElement('p');
 title.setAttribute('id', 'title');
 title.innerText = 'SNAKE';
 
+const record = localStorage.getItem('record');
+
 const counter = document.createElement('p');
 counter.setAttribute('id', 'counter');
-counter.innerText = 'Счетчик: 0';
+counter.innerText = `Score: 0 ${record ? `Max: ${record}` : ''}`;
 
 const canvas = document.createElement('canvas');
 canvas.setAttribute('width', GRID_WIDTH * CELL_SIZE + 1);
@@ -202,12 +204,14 @@ class Game {
     });
     
 
-    this.timer = setInterval(() => this.Update(snake, apple), 1000 / 8);
+    this.timer = setInterval(() => this.Update(snake, apple), 1000 / 10);
     console.log(this.timer);
   }
    
-  static Stop()
+  static Stop(points)
   {
+    if (record && Number(record) < points || !record)
+      localStorage.setItem('record', points);
     clearInterval(this.timer); //Остановка обновления
     youLoserMessage.className = '';
     drawBoard();
@@ -227,9 +231,9 @@ class Game {
     }
   
     if (snake.isCrashed()) {
-      return this.Stop();
+      return this.Stop(snake.points);
     }
-    counter.innerText = `Счётчик: ${snake.points}`;
+    counter.innerText = `Score: ${snake.points} ${record ? `Max: ${record}` : ''}`;
     apple.draw();
     snake.draw();
     drawBoard();
