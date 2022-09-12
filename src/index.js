@@ -24,12 +24,55 @@ const CELL_SIZE = 20;
 const GRID_WIDTH = 30;
 const GRID_HEIGHT = 30;
 
+const mainContainer = document.createElement('div');
+mainContainer.setAttribute('id', 'main');
+
+const title = document.createElement('p');
+title.setAttribute('id', 'title');
+title.innerText = 'SNAKE';
+
+const counter = document.createElement('p');
+counter.setAttribute('id', 'counter');
+counter.innerText = 'Счетчик: 0';
+
 const canvas = document.createElement('canvas');
-canvas.setAttribute('width', GRID_WIDTH * CELL_SIZE);
-canvas.setAttribute('height', GRID_HEIGHT * CELL_SIZE);
-document.body.appendChild(canvas);
+canvas.setAttribute('width', GRID_WIDTH * CELL_SIZE + 1);
+canvas.setAttribute('height', GRID_HEIGHT * CELL_SIZE + 1);
+
+document.body.appendChild(mainContainer);
+
+document.getElementById('main').appendChild(title);
+document.getElementById('main').appendChild(canvas);
+document.getElementById('main').appendChild(counter);
+
+const youLoserMessage = document.createElement('p');
+youLoserMessage.setAttribute('id', 'you-loser');
+youLoserMessage.innerHTML = `<p>You lose</p><a id="restart">RESTART</a>`
+document.body.appendChild(youLoserMessage);
+
 
 var ctx = canvas.getContext("2d"); //Получение контекста — через него можно работать с холстом
+
+var bw = GRID_WIDTH * CELL_SIZE;
+// Box height
+var bh = GRID_HEIGHT * CELL_SIZE;
+// Padding
+var p = 0;
+
+function drawBoard(){
+    for (var x = 0; x <= bw; x += CELL_SIZE) {
+        ctx.moveTo(0.2 + x + p, p);
+        ctx.lineTo(0.2 + x + p, bh + p);
+    }
+
+    for (var x = 0; x <= bh; x += CELL_SIZE) {
+      ctx.moveTo(p, 0.2 + x + p);
+      ctx.lineTo(bw + p, 0.2 + x + p);
+    }
+    ctx.strokeStyle = `#afafaf`;
+    ctx.stroke();
+}
+
 
 
 function getRandomValue(min, max) {
@@ -43,7 +86,6 @@ class Snake {
     this.hx = getRandomValue(10, 20);
     this.hy = getRandomValue(10, 20);
     this.points = 0;
-    this.isCellAdded = false;
     this.cells = [
       new Cell(this.hx, this.hy),
       new Cell(this.hx - this.dx, this.hy - this.dy),
@@ -56,9 +98,7 @@ class Snake {
   addCell() {
     const prevLastCell = this.cells[this.cells.length - 2];
     const lastCell = this.cells.last();
-    console.log(prevLastCell, lastCell);
     this.cells.push(new Cell(2 * lastCell.x - prevLastCell.x, 2 * lastCell.y - prevLastCell.y))
-    console.log(this.cells)
   }
 
   draw() {
@@ -73,10 +113,12 @@ class Snake {
         lastCell = temp;
       } else {
         lastCell = Object.assign(new Cell(), cell);
-        this.hx = cell.x + this.dx;
-        this.hy = cell.y + this.dy;
-        cell.x = this.hx;
-        cell.y = this.hy;
+        const x = (cell.x + this.dx + GRID_WIDTH) % GRID_WIDTH;
+        const y = (cell.y + this.dy + GRID_HEIGHT) % GRID_HEIGHT;
+        this.hx = x;
+        this.hy = y;
+        cell.x = x;
+        cell.y = y;
       }
       cell.draw();
     });
@@ -86,19 +128,6 @@ class Snake {
     console.log('eat apple')
     this.addCell();
     this.points++;
-    // const allCells = [];
-    
-    // for (let i = 0; i < GRID_WIDTH; i++) {
-    //   for (let j = 0; j < GRID_HEIGHT; j++) {
-    //     allCells.push({ x:i, y:j })
-    //   }
-    // }
-
-    // const emptyCells = allCells.filter(cell => this.cells.some(snakeCell => snakeCell.isIntersected(cell)));
-
-    // const emptyCell = emptyCells.choice();
-    
-    
   }
 
   isCrashed() {
@@ -107,8 +136,8 @@ class Snake {
         return true;
       }
     }
-    if (this.hx === GRID_WIDTH || this.hx === 0 || this.hy === GRID_HEIGHT || this.hy === 0)
-      return true;
+    // if (this.hx === GRID_WIDTH || this.hx === 0 || this.hy === GRID_HEIGHT || this.hy === 0)
+    //   return true;
     return false;
   }
 }
@@ -148,6 +177,9 @@ class Apple {
 class Game {
   static Start()
   {
+    ctx.clearRect(0, 0, canvas.width, canvas.height); //Очистка холста от предыдущего кадраp
+    youLoserMessage.className = 'hidden';
+
     const snake = new Snake();
     const apple = new Apple();
   
@@ -170,12 +202,14 @@ class Game {
       }
     });
     
-    this.timer = setInterval(() => this.Update(snake, apple), 1000 / 5); //Состояние игры будет обновляться 60 раз в секунду — при такой частоте обновление происходящего будет казаться очень плавным
+    this.timer = setInterval(() => this.Update(snake, apple), 1000 / 8);
   }
    
   static Stop()
   {
     clearInterval(this.timer); //Остановка обновления
+    youLoserMessage.className = '';
+    drawBoard();
   }
    
   static Update(snake, apple) //Обновление игры
@@ -185,8 +219,7 @@ class Game {
    
   static Draw(snake, apple) //Работа с графикой
   {
-    ctx.clearRect(0, 0, canvas.width, canvas.height); //Очистка холста от предыдущего кадра
-    // console.log(snake.hx, apple.x);
+    ctx.clearRect(0, 0, canvas.width, canvas.height); //Очистка холста от предыдущего кадраp
     if (snake.hx === apple.x && snake.hy === apple.y) {
       snake.eat(apple);
       apple.updatePosition();
@@ -195,10 +228,13 @@ class Game {
     if (snake.isCrashed()) {
       return this.Stop();
     }
-  
+    counter.innerText = `Счётчик: ${snake.points}`;
     apple.draw();
     snake.draw();
+    drawBoard();
   }
 }
+
+document.getElementById('restart').onclick = Game.Start;
 
 Game.Start();
