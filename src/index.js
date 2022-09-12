@@ -44,15 +44,20 @@ class Snake {
     this.hy = getRandomValue(10, 20);
     this.points = 0;
     this.isCellAdded = false;
-    this.cells = [new Cell(this.hx, this.hy), new Cell(this.hx - this.dx, this.hy - this.dy)];
+    this.cells = [
+      new Cell(this.hx, this.hy),
+      new Cell(this.hx - this.dx, this.hy - this.dy),
+      new Cell(this.hx - 2 * this.dx, this.hy - 2 * this.dy),
+    ];
+
+    this.cells;
   }
 
   addCell() {
-    const firstCell = Object.assign(new Cell(), this.cells.first()); 
-    firstCell.x = firstCell.x + this.dx;
-    firstCell.y = firstCell.y + this.dy;
-    this.cells.unshift(firstCell)
-    this.isCellAdded = true;
+    const prevLastCell = this.cells[this.cells.length - 2];
+    const lastCell = this.cells.last();
+    console.log(prevLastCell, lastCell);
+    this.cells.push(new Cell(2 * lastCell.x - prevLastCell.x, 2 * lastCell.y - prevLastCell.y))
     console.log(this.cells)
   }
 
@@ -60,27 +65,26 @@ class Snake {
     let lastCell = null;
 
     this.cells.forEach(cell => {
-      if (!this.isCellAdded) {
-        if (lastCell) {
-          cell.x = lastCell.x;
-          cell.y = lastCell.y;
-        } else {
-          lastCell = Object.assign(new Cell(), cell);
-          this.hx = cell.x + this.dx;
-          this.hy = cell.y + this.dy;
-          cell.x = this.hx;
-          cell.y = this.hy;
-        }
+
+      if (lastCell) {
+        const temp = Object.assign(new Cell(), cell)
+        cell.x = lastCell.x;
+        cell.y = lastCell.y;
+        lastCell = temp;
+      } else {
+        lastCell = Object.assign(new Cell(), cell);
+        this.hx = cell.x + this.dx;
+        this.hy = cell.y + this.dy;
+        cell.x = this.hx;
+        cell.y = this.hy;
       }
       cell.draw();
     });
-
-    this.isCellAdded = false;
   }
 
-  eat(apple) {
+  eat() {
     console.log('eat apple')
-    // this.addCell();
+    this.addCell();
     this.points++;
     // const allCells = [];
     
@@ -127,14 +131,17 @@ class Cell {
 
 class Apple {
   constructor() {
-    this.x = getRandomValue(0, GRID_WIDTH - 1);
-    this.y = getRandomValue(0, GRID_HEIGHT - 1);
+    this.updatePosition();
   }
 
   draw() {
     ctx.fillStyle="green";
-    ctx.rect(this.x * CELL_SIZE, this.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-    ctx.fill();
+    ctx.fillRect(this.x * CELL_SIZE, this.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+  }
+
+  updatePosition() {
+    this.x = getRandomValue(2, GRID_WIDTH - 2);
+    this.y = getRandomValue(2, GRID_HEIGHT - 2);
   }
 }
 
@@ -182,8 +189,7 @@ class Game {
     // console.log(snake.hx, apple.x);
     if (snake.hx === apple.x && snake.hy === apple.y) {
       snake.eat(apple);
-      apple.x = getRandomValue(0, GRID_WIDTH - 1);
-      apple.y= getRandomValue(0, GRID_HEIGHT - 1);
+      apple.updatePosition();
     }
   
     if (snake.isCrashed()) {
