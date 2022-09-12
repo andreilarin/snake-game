@@ -37,6 +37,11 @@ const counter = document.createElement('p');
 counter.setAttribute('id', 'counter');
 counter.innerText = `Score: 0 ${record ? `Max: ${record}` : ''}`;
 
+const footer = document.createElement('p');
+footer.setAttribute('id', 'developers');
+footer.innerHTML = 'by <a href="https://github.com/andreilarin">Andrew Larin</a> and <a href="https://github.com/andreilarin">Igor Alekseev</a>'
+document.body.appendChild(footer);
+
 const canvas = document.createElement('canvas');
 canvas.setAttribute('width', GRID_WIDTH * CELL_SIZE + 1);
 canvas.setAttribute('height', GRID_HEIGHT * CELL_SIZE + 1);

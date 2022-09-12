@@ -6,10 +6,31 @@ body {
     justify-content: center;
     min-height: 97vh;
     font-family: 'Press Start 2P';
+    overflow: hidden;
 }
 
 canvas {
     background-color: #efefef;
+}
+
+#developers {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    color: rgba(0, 0, 0, 0.436);
+    padding: 5px 15px;
+    font-size: 10px;
+}
+
+#developers a {
+    text-decoration: none;
+    color: rgba(0, 0, 0, 0.178);
+    cursor: pointer;
+}
+
+#developers a:hover {
+    text-decoration: none;
+    color: rgba(0, 0, 0, 0.436);
 }
 
 #title {
