@@ -1,4 +1,10 @@
+import { Apple } from './apple';
+import { GRID_HEIGHT } from './constants';
+import { CELL_SIZE } from './constants';
+import { GRID_WIDTH } from './constants';
 import './index.css';
+import { Snake } from './snake';
+import { TouchController } from './utils';
 
 if (!Array.prototype.last){
   Array.prototype.last = function(){
@@ -18,11 +24,6 @@ if (!Array.prototype.choice){
     return this[index];
   };
 };
-
-const CELL_SIZE = 20;
-
-const GRID_WIDTH = 30;
-const GRID_HEIGHT = 30;
 
 const mainContainer = document.createElement('div');
 mainContainer.setAttribute('id', 'main');
@@ -58,15 +59,13 @@ youLoserMessage.innerHTML = `<p>You lose</p><a id="restart">RESTART</a>`
 document.body.appendChild(youLoserMessage);
 
 
-var ctx = canvas.getContext("2d"); //Получение контекста — через него можно работать с холстом
-
 var bw = GRID_WIDTH * CELL_SIZE;
 // Box height
 var bh = GRID_HEIGHT * CELL_SIZE;
 // Padding
 var p = 0;
 
-function drawBoard(){
+function drawBoard(ctx){
     for (var x = 0; x <= bw; x += CELL_SIZE) {
         ctx.moveTo(0.2 + x + p, p);
         ctx.lineTo(0.2 + x + p, bh + p);
@@ -80,115 +79,20 @@ function drawBoard(){
     ctx.stroke();
 }
 
-
-
-function getRandomValue(min, max) {
-  return Math.floor(min + (Math.random() * (max - min)));
-}
-
-class Snake {
-  constructor() {
-    this.dx = getRandomValue(-1,1) || 1;
-    this.dy = getRandomValue(-1,1) && 0;
-    this.hx = getRandomValue(10, 20);
-    this.hy = getRandomValue(10, 20);
-    this.points = 0;
-    this.cells = [
-      new Cell(this.hx, this.hy),
-      new Cell(this.hx - this.dx, this.hy - this.dy),
-      new Cell(this.hx - 2 * this.dx, this.hy - 2 * this.dy),
-    ];
-
-    this.cells;
-  }
-
-  addCell() {
-    const prevLastCell = this.cells[this.cells.length - 2];
-    const lastCell = this.cells.last();
-    this.cells.push(new Cell(2 * lastCell.x - prevLastCell.x, 2 * lastCell.y - prevLastCell.y))
-  }
-
-  draw() {
-    let lastCell = null;
-
-    this.cells.forEach(cell => {
-
-      if (lastCell) {
-        const temp = Object.assign(new Cell(), cell)
-        cell.x = lastCell.x;
-        cell.y = lastCell.y;
-        lastCell = temp;
-      } else {
-        lastCell = Object.assign(new Cell(), cell);
-        const x = (cell.x + this.dx + GRID_WIDTH) % GRID_WIDTH;
-        const y = (cell.y + this.dy + GRID_HEIGHT) % GRID_HEIGHT;
-        this.hx = x;
-        this.hy = y;
-        cell.x = x;
-        cell.y = y;
-      }
-      cell.draw();
-    });
-  }
-
-  eat() {
-    console.log('eat apple')
-    this.addCell();
-    this.points++;
-  }
-
-  isCrashed() {
-    for (let i = 4; i < this.cells.length; i++) {
-      if (this.cells[i].x === this.hx && this.cells[i].y === this.hy) {
-        return true;
-      }
-    }
-    // if (this.hx === GRID_WIDTH || this.hx === 0 || this.hy === GRID_HEIGHT || this.hy === 0)
-    //   return true;
-    return false;
-  }
-}
-
-class Cell {
-  constructor(x, y) {
-    this.x = x;
-    this.y = y;
-  }
-
-  draw() {
-    ctx.fillStyle="red";
-    ctx.fillRect(this.x * CELL_SIZE, this.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-  }
-
-  isIntersected(cell) {
-    return this.x === cell.x && this.y === cell.y;
-  }
-}
-
-class Apple {
-  constructor() {
-    this.updatePosition();
-  }
-
-  draw() {
-    ctx.fillStyle="green";
-    ctx.fillRect(this.x * CELL_SIZE, this.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-  }
-
-  updatePosition() {
-    this.x = getRandomValue(2, GRID_WIDTH - 2);
-    this.y = getRandomValue(2, GRID_HEIGHT - 2);
-  }
-}
-
 class Game {
-  static Start()
-  {
-    youLoserMessage.className = 'hidden';
+  constructor(canvas) {
+    console.log('Init game...');
+    this.canvas = canvas;
+    this.snake = new Snake();
+    this.apple = new Apple();
+    this.ctx = canvas.getContext("2d"); //Получение контекста — через него можно работать с холстом
+    this.initKeyboardListener();
+    TouchController.Mount(canvas, this.snake);
+    console.log('Game is initilized!');
+  }
 
-    const snake = new Snake();
-    const apple = new Apple();
-  
+  initKeyboardListener() {
+    const snake = this.snake;
     document.addEventListener('keydown', function (e) {
       if (e.code === 'ArrowLeft' && snake.dx === 0) {
         snake.dx = -1;
@@ -207,48 +111,58 @@ class Game {
         snake.dy = 1;
       }
     });
-    
+  }
 
-    this.timer = setInterval(() => this.Update(snake, apple), 1000 / 10);
+  Start()
+  { 
+    console.log('Start game!');
+    youLoserMessage.className = 'hidden';
+    this.timer = setInterval(() => this.Update(), 1000 / 10);
     console.log(this.timer);
   }
    
-  static Stop(points)
+  Stop()
   {
+    const points = this.snake.points;
     if (record && Number(record) < points || !record)
       localStorage.setItem('record', points);
     clearInterval(this.timer); //Остановка обновления
     youLoserMessage.className = '';
-    drawBoard();
+    drawBoard(this.ctx);
   }
    
-  static Update(snake, apple) //Обновление игры
+  Update() //Обновление игры
   {
-    this.Draw(snake, apple);
+    this.Draw();
   }
    
-  static Draw(snake, apple) //Работа с графикой
+  Draw() //Работа с графикой
   {
-    ctx.clearRect(0, 0, canvas.width, canvas.height); //Очистка холста от предыдущего кадраp
-    if (snake.hx === apple.x && snake.hy === apple.y) {
-      snake.eat(apple);
-      apple.updatePosition();
+    this.ctx.clearRect(0, 0, canvas.width, canvas.height); //Очистка холста от предыдущего кадраp
+    if (this.snake.hx === this.apple.x && this.snake.hy === this.apple.y) {
+      this.snake.eat();
+      this.apple.updatePosition();
     }
   
-    if (snake.isCrashed()) {
-      return this.Stop(snake.points);
+    if (this.snake.isCrashed()) {
+      return this.Stop(this.snake.points);
     }
-    counter.innerText = `Score: ${snake.points} ${record ? `Max: ${record}` : ''}`;
-    apple.draw();
-    snake.draw();
-    drawBoard();
+
+    counter.innerText = `Score: ${this.snake.points} ${record ? `Max: ${record}` : ''}`;
+    this.apple.draw(this.ctx);
+    this.snake.draw(this.ctx);
+    drawBoard(this.ctx);
+    console.log('tick');
   }
 
-  static Restart() {
+  Restart() {
     window.location.reload();
   }
 }
 
-document.getElementById('restart').onclick = Game.Restart;
+const game = new Game(canvas);
 
-Game.Start();
+document.getElementById('restart').onclick = game.Restart;
+
+game.Start();
+console.log(game);
