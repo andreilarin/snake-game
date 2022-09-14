@@ -152,7 +152,6 @@ class Game {
     this.apple.draw(this.ctx);
     this.snake.draw(this.ctx);
     drawBoard(this.ctx);
-    console.log('tick');
   }
 
   Restart() {
