@@ -87,7 +87,7 @@ class Game {
     this.apple = new Apple();
     this.ctx = canvas.getContext("2d"); //Получение контекста — через него можно работать с холстом
     this.initKeyboardListener();
-    TouchController.Mount(canvas, this.snake);
+    TouchController.Mount(document.body, this.snake);
     console.log('Game is initilized!');
   }
 
