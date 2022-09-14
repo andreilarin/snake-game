@@ -11,6 +11,8 @@ body {
 
 canvas {
     background-color: #efefef;
+    max-width: 90vw;
+    max-height: 80vh;
 }
 
 #developers {
